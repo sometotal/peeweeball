@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+
+<meta charset="utf-8">
+  <style>
+    ul { list-style: none; border: 1px solid black; padding-left: 0 }
+    .row-container { border: 1px solid black }
+    .player, .data, .buttons { display: inline-block; padding: 10px; }
+    .player { background-color: green; width: 30%; }
+    .player.benched { background-color: gray; }
+    .number { font-size: 60px; }
+    .data { width: 39% }
+    .buttons { width: 30% }
+  </style>
+<!-- development version, includes helpful console warnings -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
+<script src="vue.js"></script>
+<script src="moment.js"></script>
+</head>
+<body>
+
+<div id="app">
+  <div>
+    Opponent:
+    <input v-model="opponent" placeholder="whos got next?">
+  </div>
+  <div>
+    Date: {{ timeStart || 'Start a game!' }}
+    <button v-on:click="gameLifecycle">{{ gameOn ? 'End' : 'Start' }}</button>
+    {{ gameClock | timer }}
+  </div>
+
+
+  <ul>
+    <li v-for="(player, index) in players">
+
+      <div class="row-container">
+        <div class="player" v-bind:class="{ benched: player.benched }">
+          <span><strong>{{ player.name }}</strong></span><br>
+          <span class="number">{{ player.number }}</span>
+        </div>
+        <div class="data">
+          Court time: {{ player.timeIn | timer }}<br>
+          Bench time: {{ player.timeOut | timer }}<br>
+          Shots: {{ player.shots }}<br>
+          Inbounds: {{ player.inbounds }}
+        </div>
+        <div class="buttons">
+          <button v-on:click="sub(player, index)">SUB</button>
+          <button v-on:click="shot(player, index)">Shot</button>
+          <button v-on:click="inbound(player, index)">Inbound</button>
+        </div>
+      </div>
+
+    </li>
+  </ul>
+
+  <div><button v-on:click="logData">Log Data</button></div>
+</div>
+
+  <script>
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        gameOn: false,
+        opponent: '',
+        timeStart: false,
+        timeEnd: false,
+        gameClock: '',
+        players: [
+          {
+            name: 'Thurston',
+            number: '4',
+            benched: true,
+            timeIn: 0,
+            timeOut: 0,
+            log: [ ],
+            totalTimeIn: 0,
+            totalTimeOut: 0,
+            shots: 0,
+            inbounds: 0
+          },
+          {
+            name: 'Jay',
+            number: '8',
+            benched: true,
+            timeIn: 0,
+            timeOut: 0,
+            log: [ ],
+            totalTimeIn: 0,
+            totalTimeOut: 0,
+            shots: 0,
+            inbounds: 0
+          },
+          {
+            name: 'Adrian',
+            number: '10',
+            benched: true,
+            timeIn: 0,
+            timeOut: 0,
+            log: [ ],
+            totalTimeIn: 0,
+            totalTimeOut: 0,
+            shots: 0,
+            inbounds: 0
+          },
+          {
+            name: 'Jeremiah',
+            number: '2',
+            benched: true,
+            timeIn: 0,
+            timeOut: 0,
+            log: [ ],
+            totalTimeIn: 0,
+            totalTimeOut: 0,
+            shots: 0,
+            inbounds: 0
+          },
+          {
+            name: 'Christian',
+            number: '1',
+            benched: true,
+            timeIn: 0,
+            timeOut: 0,
+            log: [ ],
+            totalTimeIn: 0,
+            totalTimeOut: 0,
+            shots: 0,
+            inbounds: 0
+          },
+          {
+            name: 'Bryson',
+            number: '9',
+            benched: true,
+            timeIn: 0,
+            timeOut: 0,
+            log: [ ],
+            totalTimeIn: 0,
+            totalTimeOut: 0,
+            shots: 0,
+            inbounds: 0
+          },
+          {
+            name: 'Michael',
+            number: '3',
+            benched: true,
+            timeIn: 0,
+            timeOut: 0,
+            log: [ ],
+            totalTimeIn: 0,
+            totalTimeOut: 0,
+            shots: 0,
+            inbounds: 0
+          },
+          {
+            name: 'Jay',
+            number: '8',
+            benched: true,
+            timeIn: 0,
+            timeOut: 0,
+            log: [ ],
+            totalTimeIn: 0,
+            totalTimeOut: 0,
+            shots: 0,
+            inbounds: 0
+          },
+          {
+            name: 'Jay',
+            number: '8',
+            benched: true,
+            timeIn: 0,
+            timeOut: 0,
+            log: [ ],
+            totalTimeIn: 0,
+            totalTimeOut: 0,
+            shots: 0,
+            inbounds: 0
+          }
+        ]
+      },
+      methods: {
+        shot: function(player, index) {
+          player.shots += 1;
+          Vue.set(this.players, index, player);
+        },
+        inbound: function(player, index) {
+          player.inbounds += 1;
+          Vue.set(this.players, index, player);
+        },
+        sub: function(player, index) {
+          const time = moment();
+          const newStatus = player.benched ? 'in' : 'out';
+
+          // push current status to logging
+          player.log.push({ status: newStatus, time });
+          // capture current time
+          player.time = time;
+          // flip benched status
+          player.benched = !player.benched
+
+          console.log(player);
+          Vue.set(this.players, index, player);
+        },
+        gameLifecycle: function() {
+          const vself = this;
+          const newDate = moment();
+          const zerotimer = moment().startOf("day");
+
+          if (this.gameOn) {
+            this.timeEnd = moment(newDate);
+            // TODO LOG DATA to DATA STORE
+          } else {
+            this.timeStart = moment(newDate);
+            this.gameClock = moment(zerotimer);
+
+            // zero all timers
+            this.players.forEach(function(player, index) {
+              player.timeOut = moment(zerotimer);
+              player.timeIn = moment(zerotimer);
+              Vue.set(vself.players, index, player);
+            });
+          }
+
+          // flag the game on!
+          this.gameOn = !this.gameOn;
+
+          this.timer();
+        },
+        timer: function() {
+          if (this.gameOn) {
+            this.interval = setInterval(() => {
+              const vself = this;
+              this.gameClock.add(1, 's');
+
+              this.players.forEach(function(player, index) {
+                if (!player.benched) {
+                  player.timeIn.add(1, 's');
+                } else {
+                  player.timeOut.add(1, 's');
+                }
+
+                Vue.set(vself.players, index, player);
+              });
+            }, 1000);
+          } else {
+            window.clearInterval(this.interval);
+          }
+        },
+        logData: function() {
+          console.log('Game: ', this.gameOn, this.opponent, this.timeStart, this.timeEnd);
+          console.log('Players: ', this.players);
+        }
+      },
+      filters: {
+        timer: function (date) {
+          return moment(date).format('mm:ss');
+        }
+      }
+    })
+  </script>
+</body>
+</html>
+
+
